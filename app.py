@@ -1,20 +1,19 @@
 from flask import Flask, render_template, request, redirect, session, send_file
 from scanner import get_system_info, scan_open_ports
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib import colors
-from reportlab.graphics.shapes import Drawing, Rect, String
+from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 import datetime
 import uuid
+import os
 
 app = Flask(__name__)
 app.secret_key = "ucmt_secret"
 
-risks = []
-training_score = 0
 
 # ISO 27001 Mapping
 iso_mapping = {
@@ -26,6 +25,7 @@ iso_mapping = {
     "No Awareness Training": "A.6.3 Security Awareness",
     "No Risk Management Policy": "A.5.4 Management Responsibilities"
 }
+
 
 # -------- PAGE BORDER ----------
 def draw_page_border(canvas, doc):
@@ -42,6 +42,8 @@ def login():
     if request.method == "POST":
         if request.form["username"] == "admin" and request.form["password"] == "admin":
             session["user"] = "admin"
+            session["risks"] = []
+            session["training_score"] = 0
             return redirect("/dashboard")
     return render_template("login.html")
 
@@ -52,8 +54,11 @@ def dashboard():
     if "user" not in session:
         return redirect("/")
 
-    compliance = calculate_iso_compliance()
-    readiness, level = calculate_startup_readiness(compliance)
+    risks = session.get("risks", [])
+    training_score = session.get("training_score", 0)
+
+    compliance = calculate_iso_compliance(risks)
+    readiness, level = calculate_startup_readiness(risks, training_score, compliance)
 
     total = len(risks)
     high = len([r for r in risks if r["severity"]=="High"])
@@ -95,6 +100,8 @@ def risk_management():
     if "user" not in session:
         return redirect("/")
 
+    risks = session.get("risks", [])
+
     if request.method == "POST":
         risk = request.form.get("risk")
         custom = request.form.get("custom_risk")
@@ -110,14 +117,14 @@ def risk_management():
                 "control": iso_mapping.get(risk,"Not Mapped")
             })
 
+        session["risks"] = risks
+
     return render_template("risks.html", risks=risks)
 
 
 # ---------------- TRAINING ----------------
 @app.route("/training", methods=["GET","POST"])
 def training():
-    global training_score
-
     if "user" not in session:
         return redirect("/")
 
@@ -126,14 +133,14 @@ def training():
         for i in range(1,11):
             score += int(request.form.get(f"q{i}",0))
 
-        training_score = int((score/10)*100)
+        session["training_score"] = int((score/10)*100)
         return redirect("/dashboard")
 
     return render_template("training.html")
 
 
 # ---------------- CALCULATIONS ----------------
-def calculate_iso_compliance():
+def calculate_iso_compliance(risks):
     if not risks:
         return 0
 
@@ -141,7 +148,7 @@ def calculate_iso_compliance():
     return int((mapped/len(risks))*100)
 
 
-def calculate_startup_readiness(compliance):
+def calculate_startup_readiness(risks, training_score, compliance):
     risk_percent = min(len(risks)*10,100)
     readiness = int(((100-risk_percent)+training_score+compliance)/3)
 
@@ -157,14 +164,18 @@ def calculate_startup_readiness(compliance):
     return readiness, level
 
 
+# ---------------- PDF REPORT ----
 # ---------------- PDF REPORT ----------------
 @app.route("/report")
 def report():
     if "user" not in session:
         return redirect("/")
 
-    compliance = calculate_iso_compliance()
-    readiness, level = calculate_startup_readiness(compliance)
+    risks = session.get("risks", [])
+    training_score = session.get("training_score", 0)
+
+    compliance = calculate_iso_compliance(risks)
+    readiness, level = calculate_startup_readiness(risks, training_score, compliance)
 
     total = len(risks)
     high = len([r for r in risks if r["severity"]=="High"])
@@ -188,7 +199,7 @@ def report():
 
     story = []
 
-    # ---------- COVER PAGE ----------
+    # ---------- COVER ----------
     story.append(Paragraph("<b>Unified Compliance Management Tool</b>", center))
     story.append(Spacer(1,20))
     story.append(Paragraph("Enterprise Security Assessment Report", styles['Heading2']))
@@ -197,7 +208,7 @@ def report():
     story.append(Paragraph(f"Generated: {scan_time}", styles['Normal']))
     story.append(Spacer(1,40))
 
-    # ---------- RISK HEAT MAP ----------
+    # ---------- HEAT MAP ----------
     story.append(Paragraph("Risk Heat Map", styles['Heading2']))
     story.append(Spacer(1,10))
 
@@ -210,34 +221,28 @@ def report():
 
     chart.data = [[high, medium, low]]
     chart.categoryAxis.categoryNames = ["High", "Medium", "Low"]
-
     chart.bars[0].fillColor = colors.red
-    drawing.add(chart)
 
+    drawing.add(chart)
     story.append(drawing)
     story.append(PageBreak())
 
     # ---------- SYSTEM INFO ----------
     story.append(Paragraph("System Information", styles['Heading2']))
-
     sys_table = Table([
         ["Hostname", system["hostname"]],
         ["IP Address", system["ip"]],
         ["Operating System", system["os"]],
         ["Scan Date", scan_time.strftime("%Y-%m-%d %H:%M")]
     ])
-
     sys_table.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),1,colors.black),
-        ('BACKGROUND',(0,0),(-1,0),colors.lightgrey)
+        ('GRID',(0,0),(-1,-1),1,colors.black)
     ]))
-
     story.append(sys_table)
     story.append(Spacer(1,20))
 
     # ---------- METRICS ----------
     story.append(Paragraph("Security Metrics", styles['Heading2']))
-
     summary = [
         ["Metric","Value"],
         ["Total Risks", total],
@@ -262,7 +267,6 @@ def report():
 
     # ---------- RISK REGISTER ----------
     story.append(Paragraph("Risk Register", styles['Heading2']))
-
     risk_data = [["Risk","Severity","ISO Control"]]
 
     for r in risks:
@@ -270,7 +274,6 @@ def report():
 
     risk_table = Table(risk_data)
     risk_table.setStyle(TableStyle([
-        ('BACKGROUND',(0,0),(-1,0),colors.grey),
         ('GRID',(0,0),(-1,-1),1,colors.black)
     ]))
 
@@ -280,31 +283,31 @@ def report():
     # ---------- AI RECOMMENDATIONS ----------
     story.append(Paragraph("AI Recommendations", styles['Heading2']))
 
-    ai = []
-
     if high>0:
-        ai.append("- Immediate remediation required for high risks")
+        story.append(Paragraph("- Immediate remediation required for high risks", styles['Normal']))
     if compliance<70:
-        ai.append("- Improve ISO control coverage")
+        story.append(Paragraph("- Improve ISO control coverage", styles['Normal']))
     if training_score<70:
-        ai.append("- Conduct employee awareness training")
+        story.append(Paragraph("- Conduct employee awareness training", styles['Normal']))
     if readiness<60:
-        ai.append("- Implement baseline startup security controls")
+        story.append(Paragraph("- Implement baseline startup security controls", styles['Normal']))
 
-    if not ai:
-        ai.append("- Security posture strong maintain monitoring")
-
-    for r in ai:
-        story.append(Paragraph(r, styles['Normal']))
-
-    story.append(Spacer(1,30))
+    story.append(Spacer(1,20))
     story.append(Paragraph("Generated by UCMT Enterprise AI Security Platform", styles['Italic']))
 
-    doc = SimpleDocTemplate(file, pagesize=A4)
+    # ---------- BUILD PDF ----------
+    doc = SimpleDocTemplate(
+        file,
+        pagesize=A4,
+        rightMargin=20,
+        leftMargin=20,
+        topMargin=20,
+        bottomMargin=20
+    )
+
     doc.build(story, onFirstPage=draw_page_border, onLaterPages=draw_page_border)
 
     return send_file(file, as_attachment=True)
-
 
 # ---------------- LOGOUT ----------------
 @app.route("/logout")
@@ -315,4 +318,5 @@ def logout():
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
