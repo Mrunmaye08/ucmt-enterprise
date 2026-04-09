@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>UCMT Login</title>
+    <style>
+        body{
+            margin:0;
+            background:#0b1220;
+            font-family:Arial, sans-serif;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+            color:white;
+        }
+
+```
+    .login-box{
+        background:#111a2e;
+        padding:40px;
+        border-radius:10px;
+        width:320px;
+        text-align:center;
+        box-shadow:0 0 20px rgba(0,0,0,0.5);
+    }
+
+    h2{
+        margin-bottom:20px;
+    }
+
+    input{
+        width:100%;
+        padding:10px;
+        margin:10px 0;
+        border:none;
+        border-radius:5px;
+    }
+
+    button{
+        width:100%;
+        padding:10px;
+        background:#00d4ff;
+        border:none;
+        color:black;
+        font-weight:bold;
+        border-radius:5px;
+        cursor:pointer;
+    }
+
+    button:hover{
+        background:#00aacc;
+    }
+</style>
+```
+
+</head>
+
+<body>
+
+<div class="login-box">
+    <h2>Cyber GRC Tool Login</h2>
+
+```
+<form method="POST">
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+</form>
+```
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Select Startup</title>
+
+<style>
+body{
+    font-family: Arial;
+    background:#0b1e2d;
+    color:white;
+    padding:40px;
+}
+
+.box{
+    background:#132f4c;
+    padding:20px;
+    border-radius:10px;
+    width:400px;
+}
+
+input{
+    padding:10px;
+    width:100%;
+    margin-top:10px;
+}
+
+button{
+    padding:10px;
+    background:#00e5ff;
+    border:none;
+    margin-top:10px;
+    width:100%;
+}
+
+a{
+    color:#00e5ff;
+    text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Select Startup</h1>
+
+<div class="box">
+<form method="POST">
+<input type="text" name="name" placeholder="Enter Startup Name" required>
+<button type="submit">Add Startup</button>
+</form>
+</div>
+
+<h2>Available Startups</h2>
+
+<ul>
+{% for s in startups %}
+<li>
+{{s.name}} 
+<a href="/select/{{s.id}}">Open</a>
+</li>
+{% endfor %}
+</ul>
+
+</body>
+</html>

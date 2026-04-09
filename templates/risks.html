@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Risk Management</title>
+
+<style>
+body{
+    font-family: Arial;
+    background:#0b1e2d;
+    color:white;
+    padding:20px;
+}
+input, select{
+    padding:8px;
+    margin:5px;
+}
+button{
+    padding:10px;
+    background:#00e5ff;
+    border:none;
+    font-weight:bold;
+}
+table{
+    width:100%;
+    margin-top:20px;
+    background:#132f4c;
+}
+th, td{
+    padding:10px;
+    border:1px solid #1e4d6b;
+}
+a{
+    color:#00e5ff;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Risk Management</h2>
+
+<form method="POST">
+
+<select name="risk" required>
+<option value="">Select Risk</option>
+<option>No Security Policy</option>
+<option>Weak Password Policy</option>
+<option>No Backup Strategy</option>
+<option>No Risk Management Policy</option>
+<option>Employee awareness training is missing</option>
+<option>Open Ports Detected</option>
+<option value="custom">Custom Risk</option>
+</select>
+
+<input type="text" name="custom_risk" placeholder="If custom, type here">
+
+<select name="severity">
+<option value="High">High</option>
+<option value="Medium">Medium</option>
+<option value="Low">Low</option>
+</select>
+
+<button type="submit">Add Risk</button>
+
+</form>
+
+<h3>Existing Risks</h3>
+
+<table>
+<tr>
+<th>Risk</th>
+<th>Severity</th>
+<th>ISO Control</th>
+</tr>
+
+{% for r in risks %}
+<tr>
+<td>{{r.name}}</td>
+<td>{{r.severity}}</td>
+<td>{{r.control}}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+<br>
+<a href="/dashboard">Back to Dashboard</a>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Asset Discovery & Security Scan</h2>
+
+<h3>System Info</h3>
+<ul>
+{% for key, value in system.items() %}
+<li><b>{{key}}</b>: {{value}}</li>
+{% endfor %}
+</ul>
+
+<h3>Open Ports</h3>
+<table>
+<tr>
+<th>Port</th>
+<th>Service</th>
+<th>Risk</th>
+</tr>
+
+{% for port in ports %}
+<tr>
+<td>{{port.port}}</td>
+<td>{{port.service}}</td>
+<td>{{port.risk}}</td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

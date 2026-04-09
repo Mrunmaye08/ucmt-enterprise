@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Compliance</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>UCMT</h2>
+    <a href="/">Dashboard</a>
+    <a href="/risks">Risks</a>
+    <a href="/training">Training</a>
+    <a href="/compliance">Compliance</a>
+    <a href="/scan">Run Scan</a>
+</div>
+
+<div class="main">
+    <h1>Compliance Mapping</h1>
+
+    <table>
+        <tr>
+            <th>Risk</th>
+            <th>Framework Mapping</th>
+        </tr>
+
+        {% for item in data %}
+        <tr>
+            <td>{{ item.risk }}</td>
+            <td>{{ item.framework }}</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+</div>
+
+</body>
+</html>

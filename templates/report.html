@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Security Report</title>
+    <style>
+        body{
+            font-family: Arial;
+            background:#0b1b2b;
+            color:white;
+            padding:20px;
+        }
+        .card{
+            background:#132f4c;
+            padding:20px;
+            margin:15px 0;
+            border-radius:10px;
+        }
+        h1{color:#00e5ff;}
+    </style>
+</head>
+<body>
+
+<h1>Startup Security Report</h1>
+
+<div class="card">
+    <h3>Compliance Score</h3>
+    <p>75%</p>
+</div>
+
+<div class="card">
+    <h3>Training Score</h3>
+    <p>{{ training }}</p>
+</div>
+
+<div class="card">
+    <h3>Readiness Level</h3>
+    <p>{{ readiness }}%</p>
+</div>
+
+<a href="/dashboard" style="color:#00e5ff;">Back to Dashboard</a>
+
+</body>
+</html>
