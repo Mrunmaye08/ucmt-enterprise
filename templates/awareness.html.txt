@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Security Awareness Training</title>
+</head>
+<body>
+
+<h2>Employee Security Awareness Training</h2>
+
+<h3>Phishing Awareness</h3>
+<iframe width="560" height="315"
+src="https://www.youtube.com/embed/3gpOM9e3C5o"
+allowfullscreen></iframe>
+
+<h3>Password Security</h3>
+<iframe width="560" height="315"
+src="https://www.youtube.com/embed/7U-RbOKanYs"
+allowfullscreen></iframe>
+
+<h3>Social Engineering</h3>
+<iframe width="560" height="315"
+src="https://www.youtube.com/embed/LCZTcfdZ3Ow"
+allowfullscreen></iframe>
+
+</body>
+</html>

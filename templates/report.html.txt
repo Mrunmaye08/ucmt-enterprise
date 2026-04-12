@@ -1,43 +1,140 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Security Report</title>
-    <style>
-        body{
-            font-family: Arial;
-            background:#0b1b2b;
-            color:white;
-            padding:20px;
-        }
-        .card{
-            background:#132f4c;
-            padding:20px;
-            margin:15px 0;
-            border-radius:10px;
-        }
-        h1{color:#00e5ff;}
-    </style>
-</head>
-<body>
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics.charts.barcharts import VerticalBarChart
 
-<h1>Startup Security Report</h1>
+@app.route("/report")
+def report():
+    if "user" not in session:
+        return redirect("/")
 
-<div class="card">
-    <h3>Compliance Score</h3>
-    <p>75%</p>
-</div>
+    risks = session.get("risks", [])
+    training_score = session.get("training_score", 0)
 
-<div class="card">
-    <h3>Training Score</h3>
-    <p>{{ training }}</p>
-</div>
+    total = len(risks)
+    high = len([r for r in risks if r["severity"]=="High"])
+    medium = len([r for r in risks if r["severity"]=="Medium"])
+    low = len([r for r in risks if r["severity"]=="Low"])
 
-<div class="card">
-    <h3>Readiness Level</h3>
-    <p>{{ readiness }}%</p>
-</div>
+    compliance = calculate_compliance(risks)
+    readiness = calculate_readiness(risks, training_score)
 
-<a href="/dashboard" style="color:#00e5ff;">Back to Dashboard</a>
+    system = get_system_info()
+    file = "UCMT_Professional_Report.pdf"
 
-</body>
-</html>
+    styles = getSampleStyleSheet()
+    story = []
+
+    # -------- TITLE --------
+    story.append(Paragraph("<b>Unified Compliance Management Tool</b>", styles['Title']))
+    story.append(Spacer(1,10))
+    story.append(Paragraph("Enterprise Security Audit Report", styles['Heading2']))
+    story.append(Spacer(1,20))
+
+    # -------- HEAT MAP --------
+    story.append(Paragraph("Risk Heat Map", styles['Heading2']))
+    story.append(Spacer(1,10))
+
+    drawing = Drawing(400,200)
+    chart = VerticalBarChart()
+
+    chart.x = 50
+    chart.y = 30
+    chart.height = 150
+    chart.width = 300
+
+    chart.data = [[high, medium, low]]
+    chart.categoryAxis.categoryNames = ["High","Medium","Low"]
+
+    chart.bars[0].fillColor = colors.red
+
+    drawing.add(chart)
+    story.append(drawing)
+
+    story.append(PageBreak())
+
+    # -------- SYSTEM INFO --------
+    story.append(Paragraph("System Information", styles['Heading2']))
+
+    sys_table = Table([
+        ["Hostname", system["hostname"]],
+        ["IP", system["ip"]],
+        ["OS", system["os"]],
+        ["Firewall", system["firewall"]],
+        ["Antivirus", system["antivirus"]],
+        ["Encryption", system["encryption"]],
+        ["Backup", system["backup"]],
+    ])
+
+    sys_table.setStyle(TableStyle([
+        ('GRID',(0,0),(-1,-1),1,colors.black),
+        ('BACKGROUND',(0,0),(-1,0),colors.lightgrey)
+    ]))
+
+    story.append(sys_table)
+    story.append(Spacer(1,20))
+
+    # -------- METRICS --------
+    story.append(Paragraph("Security Metrics", styles['Heading2']))
+
+    metrics = [
+        ["Metric","Value"],
+        ["Total Risks", total],
+        ["High", high],
+        ["Medium", medium],
+        ["Low", low],
+        ["Training Score", f"{training_score}%"],
+        ["ISO Compliance", f"{compliance}%"],
+        ["Startup Readiness", f"{readiness}%"]
+    ]
+
+    table = Table(metrics)
+    table.setStyle(TableStyle([
+        ('BACKGROUND',(0,0),(-1,0),colors.darkblue),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+        ('GRID',(0,0),(-1,-1),1,colors.black)
+    ]))
+
+    story.append(table)
+    story.append(Spacer(1,20))
+
+    # -------- RISK REGISTER --------
+    story.append(Paragraph("Risk Register", styles['Heading2']))
+
+    risk_data = [["Risk","Severity","ISO Control"]]
+
+    for r in risks:
+        risk_data.append([
+            r["name"],
+            r["severity"],
+            r.get("control","Not Mapped")
+        ])
+
+    risk_table = Table(risk_data)
+    risk_table.setStyle(TableStyle([
+        ('BACKGROUND',(0,0),(-1,0),colors.grey),
+        ('GRID',(0,0),(-1,-1),1,colors.black)
+    ]))
+
+    story.append(risk_table)
+    story.append(Spacer(1,20))
+
+    # -------- AI RECOMMENDATIONS --------
+    story.append(Paragraph("AI Recommendations", styles['Heading2']))
+
+    if high > 0:
+        story.append(Paragraph("- Immediate action required for high risks", styles['Normal']))
+    if training_score < 70:
+        story.append(Paragraph("- Improve employee awareness training", styles['Normal']))
+    if compliance < 70:
+        story.append(Paragraph("- Improve ISO compliance", styles['Normal']))
+
+    story.append(Spacer(1,20))
+    story.append(Paragraph("Generated by UCMT Enterprise AI Security Platform", styles['Italic']))
+
+    doc = SimpleDocTemplate(file, pagesize=A4)
+    doc.build(story)
+
+    return send_file(file, as_attachment=True)

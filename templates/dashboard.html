@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>StartupGRC Dashboard</title>
+<title>UCMT Enterprise Dashboard</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -13,51 +13,92 @@ body{
     padding:20px;
 }
 
+/* HEADER */
+h1{
+    color:#00e6e6;
+    margin-bottom:20px;
+}
+
+/* GRID CARDS */
+.grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+    gap:15px;
+}
+
 .card{
     background:#132f4c;
     padding:20px;
-    margin:10px;
-    display:inline-block;
-    width:220px;
     border-radius:10px;
     text-align:center;
     box-shadow:0 0 10px rgba(0,229,255,0.3);
 }
 
+.card h2{
+    font-size:16px;
+    color:#00e6e6;
+}
+
+.card h3{
+    font-size:22px;
+}
+
+/* BUTTONS */
+.section{
+    margin-top:30px;
+    text-align:center;
+}
+
 .btn{
     background:#00e5ff;
     color:black;
-    padding:12px 20px;
+    padding:12px 18px;
     text-decoration:none;
     border-radius:8px;
-    margin:10px;
+    margin:8px;
     display:inline-block;
     font-weight:bold;
+    transition:0.3s;
 }
 
-.section{
-    margin-top:30px;
+.btn:hover{
+    background:#00bcd4;
 }
 
+/* CHART */
 .chart-container{
     background:#132f4c;
     padding:20px;
     border-radius:10px;
-    margin-top:20px;
+    margin-top:30px;
 }
 
+/* RECOMMENDATIONS */
 .recommend{
     background:#132f4c;
     padding:20px;
     border-radius:10px;
-    margin-top:20px;
+    margin-top:30px;
 }
+
+.recommend li{
+    margin-bottom:8px;
+}
+
+/* COLORS */
+.high{color:#ff4d4d;}
+.medium{color:#ffaa00;}
+.low{color:#00e676;}
+
 </style>
 </head>
 
 <body>
 
-<h1>StartupGRC-AI Dashboard</h1>
+<h1>🚀 UCMT Enterprise Security Dashboard</h1>
+
+<!-- METRICS -->
+<div class="grid">
 
 <div class="card">
 <h2>Total Risks</h2>
@@ -66,17 +107,17 @@ body{
 
 <div class="card">
 <h2>High</h2>
-<h3>{{high}}</h3>
+<h3 class="high">{{high}}</h3>
 </div>
 
 <div class="card">
 <h2>Medium</h2>
-<h3>{{medium}}</h3>
+<h3 class="medium">{{medium}}</h3>
 </div>
 
 <div class="card">
 <h2>Low</h2>
-<h3>{{low}}</h3>
+<h3 class="low">{{low}}</h3>
 </div>
 
 <div class="card">
@@ -95,43 +136,49 @@ body{
 <p>{{level}}</p>
 </div>
 
+</div>
+
+<!-- BUTTONS -->
 <div class="section">
 <a href="/risks" class="btn">Risk Management</a>
-<a href="/training" class="btn">Awareness Training</a>
+<a href="/training" class="btn">Training Quiz</a>
+<a href="/awareness" class="btn">🎥 Awareness</a>
 <a href="/scan" class="btn">Run Security Scan</a>
 <a href="/report" class="btn">Generate Report</a>
 <a href="/logout" class="btn">Logout</a>
 </div>
 
-<!-- Risk Heatmap -->
+<!-- CHART -->
 <div class="chart-container">
-<h2>Risk Heatmap</h2>
+<h2>📊 Risk Heatmap</h2>
 <canvas id="riskChart"></canvas>
 </div>
 
-<!-- AI Recommendations -->
+<!-- RECOMMENDATIONS -->
 <div class="recommend">
-<h2>AI Security Recommendations</h2>
+<h2>🤖 AI Security Recommendations</h2>
 <ul>
+
 {% if high > 0 %}
-<li>Reduce high severity risks immediately</li>
+<li class="high">Immediate action required for high risks</li>
 {% endif %}
 
 {% if training < 70 %}
-<li>Conduct employee awareness training</li>
+<li class="medium">Improve employee awareness training</li>
 {% endif %}
 
 {% if compliance < 70 %}
-<li>Improve ISO compliance controls</li>
+<li class="medium">Enhance ISO compliance implementation</li>
 {% endif %}
 
 {% if readiness < 60 %}
-<li>Startup security posture needs improvement</li>
+<li class="high">Startup security posture is weak</li>
 {% endif %}
 
-<li>Enable multi-factor authentication</li>
-<li>Implement regular backups</li>
-<li>Apply security patches</li>
+<li>Enable Multi-Factor Authentication (MFA)</li>
+<li>Implement regular backup strategy</li>
+<li>Apply latest security patches</li>
+
 </ul>
 </div>
 
@@ -151,6 +198,23 @@ new Chart(ctx, {
                 '#00e676'
             ]
         }]
+    },
+    options: {
+        plugins: {
+            legend: {
+                labels: {
+                    color: 'white'
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: 'white' }
+            },
+            y: {
+                ticks: { color: 'white' }
+            }
+        }
     }
 });
 </script>

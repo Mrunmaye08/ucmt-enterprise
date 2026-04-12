@@ -1,59 +1,150 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Full Security Audit Scan</title>
+<title>UCMT Scan Dashboard</title>
 
 <style>
-body{
+body {
+    background: #0b1e2d;
+    color: white;
     font-family: Arial;
-    background:#0b1e2d;
-    color:white;
-    padding:20px;
+    padding: 20px;
+    font-size: 14px;
 }
-.card{
-    background:#132f4c;
-    padding:15px;
-    margin-top:15px;
-    border-radius:8px;
+
+h1 {
+    color: #00e6e6;
 }
-.warning{
-    color:#ffcc00;
-    font-weight:bold;
+
+h2 {
+    color: #00e6e6;
+    margin-bottom: 10px;
 }
-a{
-    color:#00e5ff;
-    text-decoration:none;
+
+.box {
+    background: #132f4c;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #00e6e6;
 }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: #00e6e6;
+    color: black;
+    padding: 10px;
+}
+
+td {
+    padding: 8px;
+    border-bottom: 1px solid #00e6e6;
+}
+
+.high { color: red; font-weight: bold; }
+.medium { color: orange; }
+.low { color: lightgreen; }
+
 </style>
 </head>
 
 <body>
 
-<h2>Full Security Audit Scan</h2>
+<h1>🚀 UCMT Security Scan Dashboard</h1>
 
-<div class="card">
-<h3>System Information</h3>
-<p><b>System:</b> {{ system.hostname }}</p>
-<p><b>User:</b> {{ system.user }}</p>
-<p><b>IP Address:</b> {{ system.ip }}</p>
-<p><b>OS Version:</b> {{ system.os }}</p>
-<p><b>MAC Address:</b> {{ system.mac }}</p>
-<p><b>Scan Date:</b> {{ scan_time }}</p>
+<!-- SYSTEM INFO -->
+<div class="box">
+<h2>System Information</h2>
+<table>
+<tr><th>Parameter</th><th>Value</th></tr>
+<tr><td>Hostname</td><td>{{system.hostname}}</td></tr>
+<tr><td>IP Address</td><td>{{system.ip}}</td></tr>
+<tr><td>Operating System</td><td>{{system.os}}</td></tr>
+<tr><td>Firewall</td><td>{{system.firewall}}</td></tr>
+<tr><td>Antivirus</td><td>{{system.antivirus}}</td></tr>
+<tr><td>Encryption</td><td>{{system.encryption}}</td></tr>
+<tr><td>Backup</td><td>{{system.backup}}</td></tr>
+<tr><td>Scan Time</td><td>{{scan_time}}</td></tr>
+</table>
 </div>
 
-<div class="card">
-<h3>Open Ports</h3>
+<!-- OPEN PORTS -->
+<div class="box">
+<h2>Open Ports Analysis</h2>
 
-{% for p in ports %}
-<p class="warning">
-⚠ Port {{p.port}} ({{p.service}}) - {{p.risk}}
-</p>
-{% endfor %}
+<table>
+<tr>
+<th>Port / Service</th>
+<th>Risk Level</th>
+<th>Description</th>
+</tr>
+{% if ports %}
+    {% for p in ports %}
+        <tr>
+            <td>{{p}}</td>
+
+            {% if p == 445 %}
+                <td class="high">High</td>
+                <td>SMB - Ransomware risk</td>
+
+            {% elif p == 135 %}
+                <td class="medium">Medium</td>
+                <td>RPC - Internal attack surface</td>
+
+            {% elif p == 3389 %}
+                <td class="medium">Medium</td>
+                <td>RDP - Brute force risk</td>
+
+            {% elif p == 80 %}
+                <td class="low">Low</td>
+                <td>HTTP - Not encrypted</td>
+
+            {% else %}
+                <td>Info</td>
+                <td>Unknown service</td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+{% else %}
+<tr><td colspan="3">No open ports detected</td></tr>
+{% endif %}
+
+</table>
+</div>
+
+<!-- SECURITY SUMMARY -->
+<div class="box">
+<h2>Security Summary</h2>
+
+<ul>
+{% if 445 in ports %}
+<li class="high">SMB port exposed → High risk</li>
+{% endif %}
+
+{% if "135" in ports %}
+<li class="medium">RPC port open → Medium risk</li>
+{% endif %}
+
+{% if system.encryption == "Disabled" %}
+<li class="high">Disk encryption disabled</li>
+{% endif %}
+
+{% if system.backup == "Not Configured" %}
+<li class="medium">No backup configured</li>
+{% endif %}
+
+{% if not ports %}
+<li class="low">No major risks detected</li>
+{% endif %}
+</ul>
 
 </div>
 
-<br>
-<a href="/dashboard">⬅ Back to Dashboard</a>
+<a href="/dashboard" style="color:#00e6e6;">⬅ Back to Dashboard</a>
 
 </body>
 </html>
