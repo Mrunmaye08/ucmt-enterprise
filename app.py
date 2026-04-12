@@ -33,11 +33,9 @@ def calculate_compliance(risks):
     mapped = sum(1 for r in risks if r.get("control") != "Not Mapped")
     return int((mapped / len(risks)) * 100)
 
-
 def calculate_readiness(risks, training):
     risk_score = min(len(risks) * 10, 100)
     return int(((100 - risk_score) + training) / 2)
-
 
 # ---------------- LOGIN ----------------
 @app.route("/", methods=["GET", "POST"])
@@ -49,7 +47,6 @@ def login():
             session["training_score"] = 0
             return redirect("/dashboard")
     return render_template("login.html")
-
 
 # ---------------- DASHBOARD ----------------
 @app.route("/dashboard")
@@ -68,23 +65,19 @@ def dashboard():
     compliance = calculate_compliance(risks)
     readiness = calculate_readiness(risks, training_score)
 
+    level = "Good"
     if readiness < 40:
         level = "Poor"
     elif readiness < 70:
         level = "Moderate"
-    else:
-        level = "Good"
 
     return render_template("dashboard.html",
-                           total=total,
-                           high=high,
-                           medium=medium,
-                           low=low,
-                           training=training_score,
-                           compliance=compliance,
-                           readiness=readiness,
-                           level=level)
-
+        total=total, high=high, medium=medium, low=low,
+        training=training_score,
+        compliance=compliance,
+        readiness=readiness,
+        level=level
+    )
 
 # ---------------- SCAN ----------------
 @app.route("/scan")
@@ -97,10 +90,10 @@ def scan():
     scan_time = datetime.datetime.now()
 
     return render_template("scan.html",
-                           system=system,
-                           ports=ports,
-                           scan_time=scan_time)
-
+        system=system,
+        ports=ports,
+        scan_time=scan_time
+    )
 
 # ---------------- AWARENESS ----------------
 @app.route("/awareness")
@@ -108,7 +101,6 @@ def awareness():
     if "user" not in session:
         return redirect("/")
     return render_template("awareness.html")
-
 
 # ---------------- TRAINING ----------------
 @app.route("/training", methods=["GET", "POST"])
@@ -125,7 +117,6 @@ def training():
         return redirect("/dashboard")
 
     return render_template("training.html")
-
 
 # ---------------- RISKS ----------------
 @app.route("/risks", methods=["GET", "POST"])
@@ -153,7 +144,6 @@ def risks():
 
     return render_template("risks.html", risks=risks)
 
-
 # -------- PAGE BORDER ----------
 def draw_border(canvas, doc):
     canvas.saveState()
@@ -161,7 +151,6 @@ def draw_border(canvas, doc):
     canvas.setLineWidth(2)
     canvas.rect(20, 20, A4[0] - 40, A4[1] - 40)
     canvas.restoreState()
-
 
 # ---------------- REPORT ----------------
 @app.route("/report")
@@ -185,7 +174,7 @@ def report():
     audit_id = str(uuid.uuid4())[:8]
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
-   file = "/tmp/UCMT_Report.pdf"
+    file = "/tmp/UCMT_Report.pdf"   # ✅ FIXED
 
     styles = getSampleStyleSheet()
 
@@ -207,7 +196,7 @@ def report():
     story.append(Paragraph(f"Generated: {now}", styles['Normal']))
     story.append(Spacer(1, 25))
 
-    # HEATMAP (FIXED)
+    # HEATMAP FIX
     story.append(Paragraph("Risk Heat Map", styles['Heading2']))
     story.append(Spacer(1, 10))
 
@@ -218,12 +207,8 @@ def report():
     chart.height = 150
     chart.width = 300
 
-    # ✅ FIX: ensure all bars visible
-    chart.data = [[max(high,1), max(medium,1), max(low,1)]]
+    chart.data = [[max(high, 1), max(medium, 1), max(low, 1)]]
     chart.categoryAxis.categoryNames = ["High", "Medium", "Low"]
-
-    # Different colors
-    chart.bars[0].fillColor = colors.red
 
     drawing.add(chart)
     story.append(drawing)
@@ -243,18 +228,16 @@ def report():
         ["Backup", system["backup"]],
     ])
 
-    sys_table.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
-    ]))
-
+    sys_table.setStyle(TableStyle([('GRID',(0,0),(-1,-1),1,colors.black)]))
     story.append(sys_table)
+
     story.append(Spacer(1, 20))
 
     # METRICS
     story.append(Paragraph("Security Metrics", styles['Heading2']))
 
     metrics = Table([
-        ["Metric", "Value"],
+        ["Metric","Value"],
         ["Total Risks", total],
         ["High", high],
         ["Medium", medium],
@@ -265,32 +248,32 @@ def report():
     ])
 
     metrics.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ('BACKGROUND',(0,0),(-1,0),colors.darkblue),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+        ('GRID',(0,0),(-1,-1),1,colors.black)
     ]))
 
     story.append(metrics)
+
     story.append(Spacer(1, 20))
 
-    # RISK REGISTER (FIXED TABLE STYLE)
+    # RISK TABLE
     story.append(Paragraph("Risk Register", styles['Heading2']))
 
-    risk_data = [["Risk", "Severity", "ISO Control"]]
-
+    risk_data = [["Risk","Severity","ISO Control"]]
     for r in risks:
-        risk_data.append([r["name"], r["severity"], r.get("control", "Not Mapped")])
+        risk_data.append([r["name"], r["severity"], r.get("control","Not Mapped")])
 
     risk_table = Table(risk_data)
-
     risk_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ('BACKGROUND',(0,0),(-1,0),colors.grey),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+        ('GRID',(0,0),(-1,-1),1,colors.black)
     ]))
 
     story.append(risk_table)
-    story.append(Spacer(1, 20))	
+
+    story.append(Spacer(1, 20))
 
     # AI RECOMMENDATIONS
     story.append(Paragraph("AI Recommendations", styles['Heading2']))
@@ -315,15 +298,12 @@ def report():
     except Exception as e:
         return f"Report Error: {str(e)}"
 
-
 # ---------------- LOGOUT ----------------
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
-
 # ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(debug=True)
-
